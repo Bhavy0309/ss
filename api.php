@@ -1,6 +1,6 @@
 <?php
-$host = "sql208.infinityfree.com";
-$dbname = "if0_39218116_playsafe";
+$host = "localhost";
+$dbname = "play safe";
 $username = "if0_39218116"; // default XAMPP user
 $password = "bhvaysigma1493"; // default XAMPP password (empty)
 
