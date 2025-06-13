@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>usesafe-great-site.net</title>
+  <style>
+    /* [Your CSS remains unchanged] */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Cool background and overlay */
+    body {
+      background: url(background.jpg) no-repeat center center fixed;
+      background-size: cover;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      /* dark transparent overlay */
+      z-index: -1;
+    }
+
+    header {
+      background: rgba(47, 84, 235, 0.9);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+    }
+
+    header .logo {
+      font-weight: 900;
+      font-size: 1.8rem;
+      letter-spacing: 0.06em;
+    }
+
+    nav a {
+      color: white;
+      margin-left: 1.5rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      cursor: pointer;
+    }
+
+    nav a:hover {
+      color: #ffc107;
+    }
+
+    main {
+      flex: 1;
+      max-width: 900px;
+      margin: 2rem auto;
+      width: 90%;
+      color: white;
+    }
+
+    #welcomeUser {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .cards {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      flex: 1 1 200px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 6px 15px rgb(0 0 0 / 0.1);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #2f54eb;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgb(0 0 0 / 0.15);
+    }
+
+    form {
+      max-width: 400px;
+      margin: 1rem auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem 2.5rem;
+      border-radius: 8px;
+      box-shadow: 0 5px 18px rgb(0 0 0 / 0.08);
+    }
+
+    form h2 {
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      color: #2f54eb;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      color: #444;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      width: 100%;
+      padding: 0.5rem 0.8rem;
+      margin-bottom: 1.2rem;
+      border: 1.8px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #2f54eb;
+      outline: none;
+    }
+
+    button {
+      background: #2f54eb;
+      border: none;
+      color: white;
+      padding: 0.7rem 1.2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 6px;
+      width: 100%;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background: #2544d6;
+    }
+
+    footer {
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #ddd;
+      margin-top: auto;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    ul.link-list {
+      list-style: none;
+      padding: 20px;
+      border-radius: 20px;
+      max-width: 320px;
+      margin: 1rem auto;
+      font-size: 1.2rem;
+    }
+
+    ul.link-list li {
+      margin: 0.6rem 0;
+    }
+
+    ul.link-list li a {
+      color: #ffdc00;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    ul.link-list li a:hover {
+      color: #ffc107;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      nav {
+        width: 100%;
+        text-align: center;
+      }
+
+      .cards {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      main {
+        width: 95%;
+        margin: 1rem auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <audio id="background-music" loop>
+    <source src="song.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <header>
+    <div class="logo">usesafe.great-site.net</div>
+    <nav>
+      <a href="index2.html" onclick="showPage('home')">Home</a>
+      <a href="#" onclick="showPage('about')">About</a>
+      <a href="#" id="navLogin" onclick="showPage('login')">Login</a>
+      <a href="#" id="navSignup" onclick="showPage('signup')">Sign Up</a>
+      <a href="#" id="navLogout" onclick="logOut()" style="display:none;">Logout</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="page active">
+      <h1>Welcome to usesafe.great-site.net</h1>
+      <p>Your safe place for games and apps.</p>
+    </section>
+
+    <section id="about" class="page">
+      <h1>About usesafe.great-site.net</h1>
+      <p>We offer a secure platform to explore games and apps with ease and privacy.</p>
+    </section>
+
+    <section id="login" class="page">
+      <form onsubmit="event.preventDefault(); logIn();">
+        <h2>Login</h2>
+        <label>Username</label>
+        <input type="text" id="loginUsername" required />
+        <label>Password</label>
+        <input type="password" id="loginPassword" required />
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <section id="signup" class="page">
+      <form onsubmit="event.preventDefault(); signUp();">
+        <h2>Sign Up</h2>
+        <label>Email</label>
+        <input type="email" id="signupEmail" required />
+        <label>Username</label>
+        <input type="text" id="signupUsername" required />
+        <label>Password</label>
+        <input type="password" id="signupPassword" required />
+        <button type="submit">Sign Up</button>
+      </form>
+    </section>
+
+    <section id="dashboard" class="page">
+      <div id="welcomeUser" style="margin-bottom:1rem;"></div>
+      <div class="cards">
+        <div class="card" onclick="showPage('games')">Games</div>
+        <div class="card" onclick="showPage('apps')">Apps</div>
+      </div>
+    </section>
+
+    <section id="games" class="page">
+      <h2>Games</h2>
+      <ul class="link-list">
+        <li><a href="tic.html">Tic Tac Toe</a></li>
+        <li><a href="chess.html">Chess</a></li>
+        <li><a href="number.html">Number Guessing Game</a></li>
+      </ul>
+      <button onclick="showPage('dashboard')">Back</button>
+    </section>
+
+    <section id="apps" class="page">
+      <h2>Apps</h2>
+      <ul class="link-list">
+        <li><a href="calc.html">Calculator</a></li>
+        <li><a href="app.html">App Recognition</a></li>
+        <li><a href="cons.html">Money Converter</a></li>
+        <li><a href="p.html">Password Generator</a></li>
+        <li><a href="atop.html">StopWatch</a></li>
+        <li><a href="lan.html">Language Journey</a></li>
+        <li><a href="math.html">Math Helper</a></li>
+        <li><a href="qr.html">QR Code</a></li>
+      </ul>
+      <button onclick="showPage('dashboard')">Back</button>
+    </section>
+  </main>
+
+  <footer>
+    &copy; 2025 usesafe.great-site.net. All rights reserved.
+  </footer>
+
+  <script>
+    // To enable autoplay after user interaction:
+    const audio = document.getElementById('background-music');
+    document.addEventListener('click', function () {
+      audio.play();
+    });
+
+    // To loop audio using JavaScript:
+    audio.addEventListener('ended', function () {
+      this.currentTime = 0;
+      this.play();
+    }, false);
+
+    async function signUp() {
+      const email = document.getElementById('signupEmail').value.trim();
+      const username = document.getElementById('signupUsername').value.trim();
+      const password = document.getElementById('signupPassword').value.trim();
+
+      try {
+        const response = await fetch("api.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "signup", email, username, password })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          alert("Sign up successful. Please log in.");
+          showPage("login");
+        } else {
+          alert(result.message || "Sign up failed");
+        }
+      } catch (error) {
+        console.error("Error during sign up:", error);
+        alert("An error occurred during sign up. Please try again.");
+      }
+    }
+
+    async function logIn() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      try {
+        const response = await fetch("api.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "login", username, password })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          document.getElementById('welcomeUser').textContent = `Welcome, ${result.username}!`;
+          showPage("dashboard");
+        } else {
+          alert(result.message || "Login failed");
+        }
+      } catch (error) {
+        console.error("Error during login:", error);
+        alert("An error occurred during login. Please try again.");
+      }
+    }
+
+    function logOut() {
+      showPage('home');
+    }
+
+    function showPage(pageId) {
+      const pages = document.querySelectorAll('.page');
+      pages.forEach(page => page.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+  </script>
+
+</body>
+
+</html>

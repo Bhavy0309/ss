@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5th Grade Math Quiz - 50 Questions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the feedback message */
+        .feedback-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.3s ease-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .feedback-message.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0); /* Animate in */
+        }
+        .feedback-message.correct {
+            background-color: #28a745; /* Green */
+        }
+        .feedback-message.incorrect {
+            background-color: #dc3545; /* Red */
+        }
+        /* Ensure buttons look clickable and are accessible */
+        .answer-btn {
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            cursor: pointer; /* Explicitly set cursor */
+        }
+        .answer-btn:hover {
+            filter: brightness(90%);
+        }
+        .answer-btn:active, .answer-btn:focus { /* Added focus for accessibility */
+            transform: scale(0.98);
+            outline: 2px solid #6366f1; /* Indigo focus outline */
+        }
+        .answer-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-100 to-indigo-200 min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <div id="quiz-container" class="bg-white p-5 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">5th Grade Math Challenge</h1>
+
+        <div id="quiz-content">
+            <div class="flex justify-between items-center mb-4 text-sm sm:text-base text-gray-600">
+                <span id="question-counter">Question 1 / 50</span>
+                <span id="score-display">Score: 0</span>
+            </div>
+
+            <div id="question-text" class="text-lg sm:text-xl text-gray-700 mb-6 min-h-[50px] sm:min-h-[60px] flex items-center justify-center text-center">
+                Loading question...
+            </div>
+
+            <div id="answer-options" class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                </div>
+        </div>
+
+        <div id="results-screen" class="hidden text-center py-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <p class="text-xl text-gray-700 mb-2">Your final score is:</p>
+            <p class="text-4xl font-bold text-indigo-600 mb-6"><span id="final-score">0</span> / <span id="total-questions">50</span></p>
+            <p id="result-message" class="text-lg text-gray-600 font-semibold mb-8"></p>
+            <button id="restart-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <div id="feedback-message" class="feedback-message"></div>
+
+    <script>
+        // --- Quiz Data (50 Questions) ---
+        const quizData = [
+            // Arithmetic: Addition & Subtraction
+            { question: "What is $789 + 345$?", options: ["1134", "1034", "1124", "1234"], answer: 0 },
+            { question: "Calculate $1000 - 234$.", options: ["766", "776", "866", "666"], answer: 0 },
+            { question: "Sarah had 125 marbles. She gave 45 to her friend. How many marbles does she have left?", options: ["70", "80", "90", "60"], answer: 1 },
+            { question: "What is  $56 + 123 + 45$?", options: ["214", "224", "234", "204"], answer: 1 },
+            { question: "A library has 2,345 fiction books and 1,876 non-fiction books. How many books are there in total?", options: ["4121", "4211", "4221", "3221"], answer: 2 },
+
+            // Arithmetic: Multiplication & Division
+            { question: "What is $15 \\times 7$?", options: ["95", "105", "115", "85"], answer: 1 },
+            { question: "Calculate $144 \\div 12$.", options: ["10", "11", "12", "13"], answer: 2 },
+            { question: "A baker makes 25 cookies per batch. If he makes 8 batches, how many cookies does he make in total?", options: ["150", "175", "200", "225"], answer: 2 },
+            { question: "What is $360 \\div 6$?", options: ["50", "60", "70", "80"], answer: 1 },
+            { question: "If 4 friends share 52 cards equally, how many cards does each friend get?", options: ["12", "13", "14", "15"], answer: 1 },
+
+            // Fractions: Basic Operations & Concepts
+            { question: "What is $\\frac{1}{2} + \\frac{1}{4}$?", options: ["$\\frac{2}{6}$", "$\\frac{3}{4}$", "$\\frac{1}{3}$", "$\\frac{2}{4}$"], answer: 1 },
+            { question: "Simplify the fraction $\\frac{8}{12}$.", options: ["$\\frac{1}{2}$", "$\\frac{2}{3}$", "$\\frac{3}{4}$", "$\\frac{4}{5}$"], answer: 1 },
+            { question: "What is $\\frac{3}{5} - \\frac{1}{5}$?", options: ["$\\frac{2}{5}$", "$\\frac{4}{5}$", "$\\frac{2}{0}$", "1"], answer: 0 },
+            { question: "Which fraction is equivalent to $\\frac{1}{3}$?", options: ["$\\frac{2}{5}$", "$\\frac{3}{9}$", "$\\frac{4}{10}$", "$\\frac{2}{7}$"], answer: 1 },
+            { question: "If a pizza is cut into 8 slices and you eat 3, what fraction of the pizza did you eat?", options: ["$\\frac{3}{8}$", "$\\frac{5}{8}$", "$\\frac{1}{3}$", "$\\frac{3}{5}$"], answer: 0 },
+            { question: "What is $2 \\times \\frac{1}{4}$?", options: ["$\\frac{2}{8}$", "$\\frac{1}{2}$", "$\\frac{3}{4}$", "1"], answer: 1 },
+            { question: "Compare $\\frac{2}{3}$ and $\\frac{3}{4}$. Which is greater?", options: ["$\\frac{2}{3}$", "$\\frac{3}{4}$", "They are equal", "Cannot compare"], answer: 1 },
+
+
+            // Decimals: Basic Operations & Concepts
+            { question: "What is $0.5 + 0.25$?", options: ["0.75", "0.30", "0.525", "7.5"], answer: 0 },
+            { question: "Convert $\\frac{1}{2}$ to a decimal.", options: ["0.2", "0.25", "0.5", "0.75"], answer: 2 },
+            { question: "What is $3.5 - 1.2$?", options: ["2.7", "2.5", "2.3", "1.3"], answer: 2 },
+            { question: "Round 3.78 to the nearest tenth.", options: ["3.7", "3.8", "4.0", "3.79"], answer: 1 },
+            { question: "If a pen costs $1.25 and you buy 3 pens, how much do you spend?", options: ["$3.00", "$3.25", "$3.75", "$4.00"], answer: 2 },
+            { question: "What is $0.1 \\times 10$?", options: ["0.01", "1", "10", "0.10"], answer: 1 },
+            { question: "Which is greater: 0.6 or 0.06?", options: ["0.6", "0.06", "They are equal", "Cannot compare"], answer: 0 },
+
+            // Geometry: Perimeter, Area, Shapes
+            { question: "What is the perimeter of a square with a side length of 5 cm?", options: ["10 cm", "15 cm", "20 cm", "25 cm"], answer: 2 },
+            { question: "What is the area of a rectangle with length 6 m and width 4 m?", options: ["10 m$^2$", "20 m$^2$", "24 m$^2$", "12 m$^2$"], answer: 2 },
+            { question: "How many sides does a pentagon have?", options: ["4", "5", "6", "7"], answer: 1 },
+            { question: "What is the name of a triangle with all sides of equal length?", options: ["Isosceles", "Scalene", "Equilateral", "Right-angled"], answer: 2 },
+            { question: "A rectangular garden is 10 feet long and 5 feet wide. What is its perimeter?", options: ["15 feet", "25 feet", "30 feet", "50 feet"], answer: 2 },
+            { question: "How many vertices (corners) does a cube have?", options: ["4", "6", "8", "12"], answer: 2 },
+
+            // Measurement: Time, Length, Weight, Volume
+            { question: "How many minutes are in 2 hours?", options: ["60 minutes", "90 minutes", "120 minutes", "150 minutes"], answer: 2 },
+            { question: "If a movie starts at 2:30 PM and lasts for 1 hour and 45 minutes, what time does it end?", options: ["3:75 PM", "4:00 PM", "4:15 PM", "3:15 PM"], answer: 2 },
+            { question: "How many centimeters are in 1 meter?", options: ["10 cm", "100 cm", "1000 cm", "1 cm"], answer: 1 },
+            { question: "A book weighs 500 grams. How many kilograms is that?", options: ["5 kg", "0.5 kg", "0.05 kg", "50 kg"], answer: 1 },
+            { question: "How many milliliters are in 1 liter?", options: ["10 ml", "100 ml", "1000 ml", "10000 ml"], answer: 2 },
+
+            // Word Problems & Mixed Concepts
+            { question: "Tom reads 15 pages of a book each day. How many pages will he read in 5 days?", options: ["60", "65", "70", "75"], answer: 3 },
+            { question: "A recipe calls for 2 cups of flour. If you want to make half the recipe, how much flour do you need?", options: ["$\\frac{1}{2}$ cup", "1 cup", "$1\\frac{1}{2}$ cups", "2 cups"], answer: 1 },
+            { question: "What is the next number in the pattern: 3, 6, 9, 12, ...?", options: ["13", "14", "15", "16"], answer: 2 },
+            { question: "If an apple costs $0.50, how many apples can you buy with $2.00?", options: ["2", "3", "4", "5"], answer: 2 },
+            { question: "A train travels 120 miles in 2 hours. What is its average speed in miles per hour?", options: ["50 mph", "60 mph", "70 mph", "240 mph"], answer: 1 },
+            { question: "What is $452 \\times 3$?", options: ["1256", "1356", "1456", "1346"], answer: 1 },
+            { question: "Find the missing number: $50 - ? = 23$.", options: ["25", "27", "33", "37"], answer: 1 },
+            { question: "A farmer has 36 eggs. He wants to put them into cartons that hold 6 eggs each. How many cartons will he need?", options: ["5", "6", "7", "8"], answer: 1 },
+            { question: "What is one-fourth of 20?", options: ["4", "5", "6", "10"], answer: 1 },
+            { question: "If you have 3 quarters, 2 dimes, and 1 nickel, how much money do you have in cents?", options: ["90 cents", "95 cents", "100 cents", "105 cents"], answer: 3 }, 
+            { question: "What is $2.5 \\times 4$?", options: ["8", "9", "10", "10.5"], answer: 2 },
+            { question: "Round 7,842 to the nearest thousand.", options: ["7,000", "7,800", "8,000", "7,900"], answer: 2 },
+            { question: "What is the value of the digit 7 in the number 3,745?", options: ["7", "70", "700", "7000"], answer: 2 },
+            { question: "A square has an area of 36 square inches. What is the length of one side?", options: ["4 inches", "6 inches", "9 inches", "18 inches"], answer: 1 },
+            { question: "Which is longer: 2 feet or 20 inches?", options: ["2 feet", "20 inches", "They are equal", "Cannot compare"], answer: 0 } 
+        ];
+
+        // --- DOM Elements ---
+        const quizContainer = document.getElementById('quiz-container');
+        const quizContent = document.getElementById('quiz-content');
+        const questionCounter = document.getElementById('question-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        // Timer-related DOM elements (timerDisplay, timerProgress) are no longer needed
+        const questionText = document.getElementById('question-text');
+        const answerOptions = document.getElementById('answer-options');
+        const resultsScreen = document.getElementById('results-screen');
+        const finalScore = document.getElementById('final-score');
+        const totalQuestionsElem = document.getElementById('total-questions');
+        const resultMessage = document.getElementById('result-message');
+        const restartBtn = document.getElementById('restart-btn');
+        const feedbackMessage = document.getElementById('feedback-message');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        // Timer-related state variables (timer, timeLeft) are no longer needed
+        const totalQuizQuestions = quizData.length;
+
+        // --- Timer Functions (Removed) ---
+        // startTimer() and updateTimerDisplay() functions are removed.
+
+        // --- Feedback Message Function ---
+        function showFeedback(isCorrect, message = '') {
+            feedbackMessage.textContent = message || (isCorrect ? "Correct!" : "Incorrect!");
+            feedbackMessage.className = 'feedback-message show';
+            if (isCorrect) {
+                feedbackMessage.classList.add('correct');
+            } else {
+                feedbackMessage.classList.add('incorrect');
+            }
+
+            setTimeout(() => {
+                feedbackMessage.className = 'feedback-message';
+            }, 1500); // Show for 1.5 seconds
+        }
+
+        // --- Question Loading and Display ---
+        function loadQuestion() {
+            if (currentQuestionIndex >= totalQuizQuestions) {
+                endQuiz();
+                return;
+            }
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} / ${totalQuizQuestions}`;
+            scoreDisplay.textContent = `Score: ${score}`;
+            questionText.innerHTML = currentQuestion.question;
+            renderMathInElement(questionText); // Render LaTeX using MathJax
+
+            answerOptions.innerHTML = ''; // Clear previous answer options
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = option; // Use innerHTML for LaTeX
+                button.classList.add('answer-btn', 'bg-indigo-500', 'hover:bg-indigo-600', 'text-white', 'font-semibold', 'py-3', 'px-4', 'rounded-lg', 'w-full', 'text-sm', 'sm:text-base', 'transition-all', 'duration-150', 'ease-in-out');
+                button.dataset.index = index; // Store the option index
+                button.addEventListener('click', (event) => handleAnswerSelection(event.target.closest('button')));
+                answerOptions.appendChild(button);
+                renderMathInElement(button); // Render LaTeX on button
+            });
+
+            // No timer to start here
+        }
+
+        // --- Answer Handling ---
+        function handleAnswerSelection(selectedButton) {
+            // No timer to clear
+            
+            const buttons = answerOptions.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true); // Disable all buttons after selection
+
+            const correctIndex = quizData[currentQuestionIndex].answer;
+
+            // Time's up condition is removed as there's no timer
+            // The 'selectedButton' will always be an actual button click
+            const selectedIndex = parseInt(selectedButton.dataset.index);
+            if (selectedIndex === correctIndex) {
+                score++;
+                showFeedback(true); // Show correct feedback
+                selectedButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+                selectedButton.classList.add('bg-green-500', '!opacity-100'); // Correct answer, full opacity
+            } else {
+                showFeedback(false); // Show incorrect feedback
+                selectedButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+                selectedButton.classList.add('bg-red-500', '!opacity-100'); // Incorrect answer
+                // Highlight the correct answer
+                buttons.forEach(btn => {
+                    if (parseInt(btn.dataset.index) === correctIndex) {
+                        btn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+                        btn.classList.add('bg-green-600'); // Show correct one
+                    }
+                });
+            }
+            
+            scoreDisplay.textContent = `Score: ${score}`; // Update score display immediately
+            setTimeout(nextQuestion, 1800); // Delay to allow user to see feedback
+        }
+
+
+        // --- Navigation ---
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        // --- End Quiz ---
+        function endQuiz() {
+            // No timer to clear
+            quizContent.classList.add('hidden'); // Hide questions section
+            resultsScreen.classList.remove('hidden'); // Show results section
+
+            finalScore.textContent = score;
+            totalQuestionsElem.textContent = totalQuizQuestions; // Show the correct total
+
+            // Provide different messages based on score percentage
+            const percentage = (score / totalQuizQuestions) * 100;
+            if (percentage >= 90) {
+                resultMessage.textContent = "Outstanding! You're a math superstar! 🌟";
+            } else if (percentage >= 75) {
+                resultMessage.textContent = "Excellent work! You have strong math skills! 👍";
+            } else if (percentage >= 60) {
+                resultMessage.textContent = "Great job! You're doing well! Keep it up! 😊";
+            } else if (percentage >= 40) {
+                resultMessage.textContent = "Good effort! Practice makes perfect! 💪";
+            } else {
+                resultMessage.textContent = "Keep practicing! Every problem you solve makes you better! 📚";
+            }
+        }
+
+        // --- Restart Quiz ---
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsScreen.classList.add('hidden'); // Hide results
+            quizContent.classList.remove('hidden'); // Show quiz content
+            loadQuestion(); // Load the first question
+        }
+
+        // --- Event Listeners ---
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // --- MathJax Configuration and Loading ---
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']], // Define inline math delimiters
+                displayMath: [['$$', '$$'], ['\\[', '\\]']], // Define display math delimiters
+                processEscapes: true // Allows for using \$ for literal dollar signs
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+
+        // Function to render MathJax in a specific element
+        function renderMathInElement(element) {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([element]).catch((err) => console.error('MathJax typesetting error:', err));
+            }
+        }
+
+        // Load MathJax dynamically
+        (function () {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'; // Use tex-svg component
+            script.async = true;
+            script.onload = () => {
+                 console.log("MathJax loaded successfully.");
+                 // Initial load of the first question *after* MathJax is ready
+                 loadQuestion();
+            };
+             script.onerror = () => {
+                console.error("Failed to load MathJax. Math formulas may not display correctly.");
+                // Fallback: Display a message and load questions without LaTeX rendering
+                questionText.innerHTML = "Error loading math formulas. We'll display questions as best as we can.<br>Starting quiz...";
+                // Still load the first question, but LaTeX won't render
+                loadQuestion();
+            };
+            document.head.appendChild(script);
+        })();
+
+        // --- Initial Load ---
+        // NOTE: Initial loadQuestion() is now called inside the MathJax script.onload callback
+    </script>
+
+</body>
+</html>

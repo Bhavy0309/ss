@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Custom CSS Variables for consistent colors */
+        :root {
+            --primary-accent: #6366F1; /* Indigo 500 - for primary actions/highlights */
+            --secondary-accent: #8B5CF6; /* Violet 500 - for secondary accents */
+            --success-color: #10B981; /* Emerald 500 */
+            --warning-color: #F59E0B; /* Amber 500 */
+            --error-color: #EF4444; /* Red 500 */
+            --text-dark: #1F2937; /* Gray 800 */
+            --text-light: #F9FAFB; /* Gray 50 */
+            --bg-start: #A78BFA; /* Violet 400 */
+            --bg-end: #818CF8;   /* Indigo 400 */
+            --card-bg: #FFFFFF;
+            --border-light: #E5E7EB; /* Gray 200 */
+
+            /* Button shadows for 3D effect */
+            --shadow-base: #D1D5DB; /* Gray 300 */
+            --shadow-primary: #4F46E5; /* Indigo 600 */
+            --shadow-success: #059669; /* Emerald 600 */
+            --shadow-error: #DC2626; /* Red 600 */
+        }
+
+        /* Ensure Inter font is applied globally */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        /* Main app container styling */
+        #main-app-container {
+            background-color: var(--card-bg);
+            padding: 2.5rem; /* Increased padding */
+            border-radius: 1.5rem; /* More rounded */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 32rem; /* Slightly wider */
+            border: 1px solid var(--border-light);
+            margin-bottom: 7rem; /* Space for feedback bar */
+            transition: all 0.3s ease-in-out;
+            transform: scale(1);
+        }
+
+        /* Header styling */
+        #app-title {
+            color: var(--text-dark);
+            font-size: 2.5rem; /* Larger title */
+            font-weight: 800; /* Extra bold */
+            text-align: center;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.05em; /* Tighter tracking */
+        }
+
+        /* Option buttons styling */
+        .option-button {
+            width: 100%;
+            padding: 1.25rem; /* More padding */
+            border-bottom-width: 6px; /* Thicker 3D border */
+            border-radius: 0.75rem; /* Rounded corners */
+            font-size: 1.25rem; /* Larger text */
+            font-weight: 700; /* Bold text */
+            color: var(--text-dark);
+            background-color: var(--card-bg);
+            transition: all 0.1s ease-out;
+            outline: none;
+            cursor: pointer;
+            border-color: var(--shadow-base);
+            box-shadow: 0 6px 0 0 var(--shadow-base);
+            transform: translateY(0);
+        }
+        .option-button:hover {
+            background-color: #f9fafb; /* Light gray hover */
+        }
+        .option-button:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 0 var(--shadow-base);
+        }
+        .option-button:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Primary blue ring */
+        }
+        .option-button.selected {
+            background-color: #EEF2FF; /* Indigo 50 */
+            border-color: var(--primary-accent);
+            box-shadow: 0 6px 0 0 var(--shadow-primary);
+        }
+        .option-button.selected:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 0 var(--shadow-primary);
+        }
+        .option-button.correct {
+            background-color: #D1FAE5; /* Emerald 50 */
+            border-color: var(--success-color);
+            color: var(--success-color);
+            box-shadow: 0 6px 0 0 var(--shadow-success);
+        }
+        .option-button.correct:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 0 var(--shadow-success);
+        }
+        .option-button.incorrect {
+            background-color: #FEE2E2; /* Red 100 */
+            border-color: var(--error-color);
+            color: var(--error-color);
+            box-shadow: 0 6px 0 0 var(--shadow-error);
+        }
+        .option-button.incorrect:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 0 var(--shadow-error);
+        }
+        .option-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: 0 6px 0 0 var(--shadow-base); /* Keep shadow for disabled */
+        }
+
+        /* Speaker button styling */
+        .speaker-button {
+            padding: 0.8rem; /* Slightly larger */
+            border-radius: 9999px; /* Full circle */
+            background-color: #E0E7FF; /* Indigo 100 */
+            transition: all 0.2s ease-in-out;
+            border: 2px solid #C7D2FE; /* Indigo 200 border */
+            box-shadow: 0 3px 0 0 #A5B4FC; /* Indigo 300 shadow */
+            cursor: pointer;
+        }
+        .speaker-button:hover {
+            background-color: #C7D2FE; /* Indigo 200 hover */
+        }
+        .speaker-button:active {
+            box-shadow: 0 0 0 0 #A5B4FC;
+            transform: translateY(3px);
+        }
+        .speaker-button svg {
+            width: 1.75rem; /* Larger icon */
+            height: 1.75rem;
+            color: var(--primary-accent);
+        }
+
+        /* Fixed feedback bar at the bottom */
+        #feedback-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            padding: 1.5rem; /* p-6 */
+            box-shadow: 0 -10px 20px -5px rgba(0, 0, 0, 0.1); /* Softer shadow */
+            border-top: 4px solid var(--border-light);
+            z-index: 100;
+            transform: translateY(100%); /* Start off-screen */
+            transition: transform 0.3s ease-out;
+        }
+        #feedback-bar.show {
+            transform: translateY(0); /* Slide in */
+        }
+        #feedback-bar.correct {
+            background-color: var(--success-color);
+            border-color: var(--shadow-success);
+            color: var(--text-light);
+        }
+        #feedback-bar.incorrect {
+            background-color: var(--error-color);
+            border-color: var(--shadow-error);
+            color: var(--text-light);
+        }
+        #feedback-bar .feedback-message {
+            font-size: 1.5rem; /* Larger feedback message */
+            font-weight: 700; /* Bold */
+            margin-bottom: 0.75rem; /* Space for mobile */
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            #feedback-bar .feedback-message {
+                margin-bottom: 0;
+            }
+        }
+
+        #feedback-bar .continue-button {
+            background-color: var(--card-bg);
+            font-weight: 700; /* Bold */
+            padding: 0.75rem 2rem; /* py-3 px-8 */
+            border-radius: 9999px; /* Rounded-full */
+            box-shadow: 0 4px 0 0 var(--shadow-primary); /* Strong shadow */
+            transform: translateY(0);
+            transition: all 0.1s ease-out;
+            outline: none;
+            cursor: pointer;
+            color: var(--primary-accent);
+        }
+        #feedback-bar.correct .continue-button {
+            color: var(--success-color);
+            box-shadow: 0 4px 0 0 var(--shadow-success);
+        }
+        #feedback-bar.incorrect .continue-button {
+            color: var(--error-color);
+            box-shadow: 0 4px 0 0 var(--shadow-error);
+        }
+        #feedback-bar .continue-button:hover {
+            transform: scale(1.02); /* Slight scale on hover */
+        }
+        #feedback-bar .continue-button:active {
+            box-shadow: 0 0 0 0;
+            transform: translateY(4px);
+        }
+        #feedback-bar .continue-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: 0 4px 0 0 var(--shadow-base); /* Keep shadow for disabled */
+        }
+
+        /* General button styles for main actions */
+        .main-action-button {
+            background-color: var(--primary-accent);
+            color: var(--text-light);
+            font-weight: 700;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 0 0 var(--shadow-primary);
+            transform: translateY(0);
+            transition: all 0.1s ease-out;
+            outline: none;
+            cursor: pointer;
+        }
+        .main-action-button:hover {
+            background-color: #4F46E5; /* Indigo 600 */
+        }
+        .main-action-button:active {
+            box-shadow: 0 0 0 0;
+            transform: translateY(4px);
+        }
+        .main-action-button:focus {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.5);
+        }
+        .main-action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: 0 4px 0 0 var(--shadow-primary);
+        }
+
+        .start-button {
+            background-color: var(--success-color);
+            color: var(--text-light);
+            font-weight: 700;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 0 0 var(--shadow-success);
+            transform: translateY(0);
+            transition: all 0.1s ease-out;
+            outline: none;
+            cursor: pointer;
+        }
+        .start-button:hover {
+            background-color: #059669; /* Emerald 600 */
+        }
+        .start-button:active {
+            box-shadow: 0 0 0 0;
+            transform: translateY(4px);
+        }
+        .start-button:focus {
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Input field style */
+        .text-input-field {
+            width: 100%;
+            padding: 1rem;
+            border-width: 2px;
+            border-color: var(--border-light);
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            transition: all 0.2s ease-in-out;
+            color: var(--text-dark);
+        }
+        .text-input-field:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-accent);
+            border-color: var(--primary-accent);
+        }
+
+        /* Progress bar styling */
+        #progress-bar {
+            background-color: var(--success-color);
+        }
+
+        /* General text styles */
+        .text-prompt {
+            color: var(--text-dark);
+        }
+        .text-source-word {
+            color: var(--text-dark);
+        }
+        .text-lesson-progress {
+            color: #6B7280; /* Gray 500 */
+        }
+        .text-score {
+            color: var(--primary-accent);
+        }
+        .text-streak {
+            color: var(--warning-color);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 font-sans">
+    <div id="main-app-container">
+        <h1 id="app-title">
+            Language Journey
+        </h1>
+
+        <div id="language-selection-screen" class="space-y-6">
+            <p class="text-center text-gray-600 mb-4 text-lg">
+                Select your learning languages:
+            </p>
+            <div class="flex flex-col space-y-4">
+                <div>
+                    <label for="source-language-select" class="block text-lg font-semibold text-gray-700 mb-2">
+                        I want to learn from:
+                    </label>
+                    <select id="source-language-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out bg-white text-gray-700 appearance-none pr-8">
+                        </select>
+                </div>
+                <div>
+                    <label for="target-language-select" class="block text-lg font-semibold text-gray-700 mb-2">
+                        I want to learn:
+                    </label>
+                    <select id="target-language-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out bg-white text-gray-700 appearance-none pr-8">
+                        </select>
+                </div>
+                <div>
+                    <label for="num-questions-select" class="block text-lg font-semibold text-gray-700 mb-2">
+                        Number of questions:
+                    </label>
+                    <select id="num-questions-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out bg-white text-gray-700 appearance-none pr-8">
+                        <option value="5">5 Questions</option>
+                        <option value="10">10 Questions</option>
+                        <option value="15">15 Questions</option>
+                        <option value="20">All (20) Questions</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-center pt-4">
+                <button
+                    id="start-quiz-button"
+                    class="start-button"
+                >
+                    Start Learning!
+                </button>
+            </div>
+            <div id="selection-error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative text-center" role="alert">
+                <span class="block sm:inline"></span>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="space-y-6 hidden">
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="h-2.5 rounded-full transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+            </div>
+
+            <p id="language-pair-display" class="text-center text-gray-600 mb-8 text-lg"></p>
+            <div class="text-center">
+                <p class="text-xl font-semibold mb-2 text-prompt" id="question-prompt">Translate this:</p>
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <button id="speaker-button" class="speaker-button hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1V9a1 1 0 011-1h1.586l4.707-4.707A1 1 0 0112 3v18a1 1 0 01-1.707.707L5.586 15z" />
+                        </svg>
+                    </button>
+                    <p id="source-word" class="text-5xl font-bold text-source-word"></p>
+                </div>
+                <p id="lesson-progress" class="text-sm text-lesson-progress"></p>
+            </div>
+
+            <div id="options-container" class="grid grid-cols-1 gap-3">
+                </div>
+
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Type your translation here..."
+                class="text-input-field hidden"
+            />
+
+            <button
+                type="button"
+                id="check-answer-button"
+                class="main-action-button mx-auto block"
+                disabled
+            >
+                Check Answer
+            </button>
+        </div>
+
+        <div id="results-screen" class="text-center hidden">
+            <h2 class="text-3xl font-bold text-gray-700 mb-4">Quiz Completed!</h2>
+            <p class="text-2xl text-gray-800 mb-6">
+                Your Score: <span id="final-score" class="font-extrabold text-score"></span>
+            </p>
+            <div class="flex items-center justify-center text-xl font-semibold text-gray-700 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                Current Streak: <span id="final-streak" class="ml-2 font-extrabold text-streak">0</span>
+            </div>
+            <button
+                onclick="handleRestart()"
+                class="main-action-button"
+            >
+                Restart Quiz
+            </button>
+        </div>
+    </div>
+
+    <div id="feedback-bar" class="hidden">
+        <div class="max-w-md mx-auto flex flex-col sm:flex-row items-center justify-between w-full">
+            <span id="feedback-message" class="feedback-message"></span>
+            <button
+                type="button"
+                id="continue-button"
+                class="continue-button"
+            >
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element References ---
+        const appTitle = document.getElementById('app-title');
+        const languageSelectionScreen = document.getElementById('language-selection-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+
+        const sourceLanguageSelect = document.getElementById('source-language-select');
+        const targetLanguageSelect = document.getElementById('target-language-select');
+        const numQuestionsSelect = document.getElementById('num-questions-select'); // New: Number of questions select
+        const startQuizButton = document.getElementById('start-quiz-button');
+        const selectionErrorMessageDiv = document.getElementById('selection-error-message');
+        const selectionErrorMessageSpan = selectionErrorMessageDiv.querySelector('span');
+
+        const progressBar = document.getElementById('progress-bar');
+        const questionPrompt = document.getElementById('question-prompt');
+        const speakerButton = document.getElementById('speaker-button');
+        const languagePairDisplay = document.getElementById('language-pair-display');
+        const sourceWordDisplay = document.getElementById('source-word');
+        const optionsContainer = document.getElementById('options-container');
+        const userInputField = document.getElementById('user-input');
+        const checkAnswerButton = document.getElementById('check-answer-button');
+
+        const feedbackBar = document.getElementById('feedback-bar');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const continueButton = document.getElementById('continue-button');
+
+        const lessonProgressDisplay = document.getElementById('lesson-progress');
+
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalStreakDisplay = document.getElementById('final-streak');
+
+        // --- Application State Variables ---
+        let currentLessonIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let currentQuizLessons = [];
+        let selectedSourceLanguageCode = '';
+        let selectedTargetLanguageCode = '';
+        let selectedOptionValue = null;
+        let currentLessonType = 'translate-mcq';
+        const appName = "Language Journey";
+
+        // --- Tone.js for Sound Effects ---
+        const correctSynth = new Tone.Synth({
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.2 }
+        }).toDestination();
+
+        const incorrectSynth = new Tone.Synth({
+            oscillator: { type: "square" },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.2 }
+        }).toDestination();
+
+        function playCorrectSound() {
+            correctSynth.triggerAttackRelease("G5", "8n");
+        }
+
+        function playIncorrectSound() {
+            incorrectSynth.triggerAttackRelease("C3", "8n");
+        }
+
+        // --- Language and Lesson Data ---
+        const languages = {
+            'en': 'English',
+            'es': 'Spanish',
+            'fr': 'French',
+            'de': 'German',
+            'it': 'Italian',
+            'pt': 'Portuguese',
+            'zh': 'Chinese',
+            'ja': 'Japanese',
+            'ko': 'Korean',
+            'ar': 'Arabic',
+            'ru': 'Russian',
+            'hi': 'Hindi',
+            'sa': 'Sanskrit'
+        };
+
+        const allLessons = [
+            { id: 1, type: 'translate-mcq', translations: { en: "Hello", es: "Hola", fr: "Bonjour", de: "Hallo", it: "Ciao", pt: "Olá", zh: "你好", ja: "こんにちは", ko: "안녕하세요", ar: "مرحبا", ru: "Привет", hi: "नमस्ते", sa: "नमस्ते" } },
+            { id: 2, type: 'translate-mcq', translations: { en: "Goodbye", es: "Adiós", fr: "Au revoir", de: "Auf Wiedersehen", it: "Arrivederci", pt: "Adeus", zh: "再见", ja: "さようなら", ko: "안녕히 계세요", ar: "مع السلامة", ru: "Do свидания", hi: "अलविदा", sa: "पुनरागमनाय" } },
+            { id: 3, type: 'translate-mcq', translations: { en: "Thank you", es: "Gracias", fr: "Merci", de: "Danke", it: "Grazie", pt: "Obrigado", zh: "谢谢", ja: "ありがとう", ko: "감사합니다", ar: "شكرا", ru: "Спасибо", hi: "धन्यवाद", sa: "धन्यवाद" } },
+            { id: 4, type: 'translate-mcq', translations: { en: "Please", es: "Por favor", fr: "S'il vous plaît", de: "Bitte", it: "Per favore", pt: "Por favor", zh: "请", ja: "お願いします", ko: "부탁합니다", ar: "من فضلك", ru: "Пожалуйста", hi: "कृपया", sa: "कृपया" } },
+            { id: 5, type: 'translate-mcq', translations: { en: "Yes", es: "Sí", fr: "Oui", de: "Ja", it: "Sì", pt: "Sim", zh: "是", ja: "はい", ko: "네", ar: "نعم", ru: "Да", hi: "हाँ", sa: "आम" } },
+            { id: 6, type: 'translate-mcq', translations: { en: "No", es: "No", fr: "Non", de: "Nein", it: "No", pt: "Não", zh: "不", ja: "いいえ", ko: "아니요", ar: "لا", ru: "Нет", hi: "नहीं", sa: "न" } },
+
+            { id: 7, type: 'listen-select', translations: { en: "Excuse me", es: "Disculpe", fr: "Excusez-moi", de: "Entschuldigen Sie", it: "Mi scusi", pt: "Com licença", zh: "打扰一下", ja: "すみません", ko: "실례합니다", ar: "عفوا", ru: "Извините", hi: "माफ़ कीजिए", sa: "क्षम्यताम्" } },
+            { id: 8, type: 'listen-select', translations: { en: "Sorry", es: "Lo siento", fr: "Désolé", de: "Es tut mir leid", it: "Mi dispiace", pt: "Desculpe", zh: "对不起", ja: "ごめんなさい", ko: "죄송합니다", ar: "آسف", ru: "Извините", hi: "माफ़ कीजिए", sa: "क्षन्तव्यम्" } },
+            { id: 9, type: 'listen-select', translations: { en: "Good morning", es: "Buenos días", fr: "Bonjour", de: "Guten Morgen", it: "Buongiorno", pt: "Bom dia", zh: "早上好", ja: "おはようございます", ko: "좋은 아침", ar: "صباح الخير", ru: "Доброе утро", hi: "सुप्रभात", sa: "सुप्रभातम्" } },
+
+            { id: 10, type: 'type-what-you-hear', translations: { en: "Good night", es: "Buenas noches", fr: "Bonne nuit", de: "Gute Nacht", it: "Buonanotte", pt: "Boa noite", zh: "晚安", ja: "おやすみなさい", ko: "안녕히 주무세요", ar: "تصبح على خير", ru: "Доброй ночи", hi: "शुभ रात्रि", sa: "शुभरात्रि" } },
+            { id: 11, type: 'type-what-you-hear', translations: { en: "How are you?", es: "¿Cómo estás?", fr: "Comment allez-vous?", de: "Wie geht es Ihnen?", it: "Come stai?", pt: "Como vai?", zh: "你好吗?", ja: "お元気ですか?", ko: "어떻게 지내세요?", ar: "كيف حالك؟", ru: "Как дела?", hi: "आप कैसे हैं?", sa: "कथम् अस्ति भवान्?" } },
+            { id: 12, type: 'type-what-you-hear', translations: { en: "What is your name?", es: "¿Cómo te llamas?", fr: "Comment vous appelez-vous?", de: "Wie heißen Sie?", it: "Come ti chiami?", pt: "Qual é o seu nome?", zh: "你叫什么名字?", ja: "お名前は何ですか?", ko: "이름이 뭐예요?", ar: "ما اسمك؟", ru: "Как вас зовут?", hi: "आपका नाम क्या है?", sa: "तav नाम किम्?" } },
+
+            { id: 13, type: 'translate-mcq', translations: { en: "My name is...", es: "Me llamo...", fr: "Je m'appelle...", de: "Ich heiße...", it: "Mi chiamo...", pt: "Meu nome é...", zh: "我叫...", ja: "私の名前は...", ko: "제 이름은...", ar: "اسمي...", ru: "Меня зовут...", hi: "मेरा नाम...", sa: "मम नाम..." } },
+            { id: 14, type: 'translate-mcq', translations: { en: "Where are you from?", es: "¿De dónde eres?", fr: "D'où venez-vous?", de: "Woher kommen Sie?", it: "Di dove sei?", pt: "De onde você é?", zh: "你来自哪里?", ja: "どちらのご出身ですか?", ko: "어디에서 ओ셨어요?", ar: "من أين أنت؟", ru: "Откуда вы?", hi: "आप कहाँ से हैं?", sa: "कुतः आगच्छसि?" } },
+            { id: 15, type: 'translate-mcq', translations: { en: "I am from...", es: "Soy de...", fr: "Je viens de...", de: "Ich komme aus...", it: "Vengo da...", pt: "Eu sou de...", zh: "我来自...", ja: "私は〜出身です。", ko: "저는 ~에서 왔어요.", ar: "أنا من...", ru: "Я из...", hi: "मैं ... से हूँ।", sa: "अहं ... अस्मि।" } },
+
+            { id: 16, type: 'listen-select', translations: { en: "Do you speak English?", es: "¿Hablas inglés?", fr: "Parlez-vous anglais?", de: "Sprechen Sie Englisch?", it: "Parli inglese?", pt: "Você fala inglês?", zh: "你会说英语吗?", ja: "英語を話せますか?", ko: "영어 할 줄 아세요?", ar: "هل تتحدث الإنجليزية؟", ru: "Вы говорите по-ангlish?", hi: "क्या आप अंग्रेजी बोलते हैं?", sa: "आङ्ग्लं वदसि वा?" } },
+            { id: 17, type: 'listen-select', translations: { en: "I don't understand", es: "No entiendo", fr: "Je ne comprends pas", de: "Ich verstehe nicht", it: "Non capisco", pt: "Não entendo", zh: "我不明白", ja: "分かりません", ko: "이해 못했어요", ar: "لا أفهم", ru: "Я не понимаю", hi: "मुझे समझ नहीं आ रहा है", sa: "न अवगच्छामि।" } },
+
+            { id: 18, type: 'type-what-you-hear', translations: { en: "Can you repeat that?", es: "¿Puedes repetir eso?", fr: "Pouvez-vous répéter?", de: "Können Sie das wiederholen?", it: "Puoi ripetere?", pt: "Pode repetir?", zh: "你能再说一遍吗?", ja: "もう一度言っていただけますか?", ko: "다시 한번 말씀해 주시겠어요?", ar: "هل يمكنك تكرار ذلك؟", ru: "Можете повторить?", hi: "क्या आप इसे दोहरा सकते हैं?", sa: "पुनः वदतु किम्?" } },
+            { id: 19, type: 'type-what-you-hear', translations: { en: "How much is it?", es: "¿Cuánto cuesta?", fr: "C'est combien?", de: "Wie viel kostet es?", it: "Quanto costa?", pt: "Quanto custa?", zh: "多少钱?", ja: "いくらですか?", ko: "얼मा예요?", ar: "بكم هذا؟", ru: "Сколько стоит?", hi: "यह कितने का है?", sa: "कiyत् मूल्यम्?" } },
+            { id: 20, type: 'type-what-you-hear', translations: { en: "Where is the bathroom?", es: "¿Dónde está el baño?", fr: "Où sont les toilettes?", de: "Wo ist die Toilette?", it: "Dov'è o banheiro?", pt: "Onde fica o banheiro?", zh: "洗手间在哪里?", ja: "トイレはどこですか?", ko: "화장실이 어디예요?", ar: "أين الحمام؟", ru: "Где туалет?", hi: "शौचालयम् कुत्र अस्ति?" } }
+        ];
+
+        // --- Functions ---
+
+        /**
+         * Populates a select element with language options.
+         * @param {HTMLSelectElement} selectElement The select element to populate.
+         * @param {Object} languageMap The map of language codes to names.
+         * @param {string} defaultValue The default selected language code.
+         */
+        function populateLanguageSelect(selectElement, languageMap, defaultValue) {
+            selectElement.innerHTML = ''; // Clear existing options
+            for (const code in languageMap) {
+                if (languageMap.hasOwnProperty(code)) {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = languageMap[code];
+                    selectElement.appendChild(option);
+                }
+            }
+            selectElement.value = defaultValue; // Set the default selected value
+        }
+
+        /**
+         * Initializes the language selection dropdowns on page load.
+         */
+        window.onload = () => {
+            appTitle.textContent = appName; // Set the app name
+            populateLanguageSelect(sourceLanguageSelect, languages, 'en'); // Default source: English
+            populateLanguageSelect(targetLanguageSelect, languages, 'es'); // Default target: Spanish
+        };
+
+        /**
+         * Displays an error message on the language selection screen.
+         * @param {string} message The error message to display.
+         */
+        function showSelectionError(message) {
+            selectionErrorMessageSpan.textContent = message;
+            selectionErrorMessageDiv.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the error message on the language selection screen.
+         */
+        function hideSelectionError() {
+            selectionErrorMessageDiv.classList.add('hidden');
+            selectionErrorMessageSpan.textContent = '';
+        }
+
+        /**
+         * Updates the progress bar based on the current lesson index.
+         */
+        function updateProgressBar() {
+            const progress = (currentLessonIndex / currentQuizLessons.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        /**
+         * Plays the given text using the Web Speech API.
+         * @param {string} text The text to speak.
+         * @param {string} lang The language code for pronunciation.
+         */
+        function speakText(text, lang) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.warn('Speech synthesis not supported in this browser.');
+            }
+        }
+
+        /**
+         * Starts the quiz based on selected languages.
+         */
+        function startQuiz() {
+            hideSelectionError();
+
+            selectedSourceLanguageCode = sourceLanguageSelect.value;
+            selectedTargetLanguageCode = targetLanguageSelect.value;
+            let requestedNumQuestions = parseInt(numQuestionsSelect.value); // Get selected number of questions
+
+            if (selectedSourceLanguageCode === selectedTargetLanguageCode) {
+                showSelectionError("Source and target languages cannot be the same. Please choose different languages.");
+                return;
+            }
+
+            // Filter lessons to only include those that have translations for both selected languages
+            let availableLessons = allLessons.filter(lesson =>
+                lesson.translations[selectedSourceLanguageCode] && lesson.translations[selectedTargetLanguageCode]
+            );
+
+            if (availableLessons.length === 0) {
+                showSelectionError("No lessons available for the selected language pair. Please choose different languages.");
+                return;
+            }
+
+            // Shuffle all available lessons
+            availableLessons.sort(() => Math.random() - 0.5);
+
+            // Limit the number of questions based on user selection, or use all if "All" is selected
+            if (requestedNumQuestions === 20 || requestedNumQuestions > availableLessons.length) {
+                currentQuizLessons = availableLessons; // Use all available if "All" or more than available requested
+            } else {
+                currentQuizLessons = availableLessons.slice(0, requestedNumQuestions);
+            }
+
+            // Reset quiz state
+            currentLessonIndex = 0;
+            score = 0;
+            streak = 0; // Reset streak
+            selectedOptionValue = null;
+            feedbackBar.classList.remove('show'); // Ensure feedback bar is hidden with transition
+            feedbackBar.classList.add('hidden'); // Fully hide it
+
+            // Update language pair display
+            languagePairDisplay.textContent = `Learn ${languages[selectedTargetLanguageCode]} from ${languages[selectedSourceLanguageCode]}`;
+
+            // Show quiz screen, hide language selection
+            languageSelectionScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            loadCurrentLesson();
+            updateProgressBar();
+        }
+
+        /**
+         * Loads the current lesson into the UI, handling different question types.
+         */
+        function loadCurrentLesson() {
+            const currentLesson = currentQuizLessons[currentLessonIndex];
+            currentLessonType = currentLesson.type; // Set the current lesson type
+
+            optionsContainer.innerHTML = ''; // Clear previous options
+            selectedOptionValue = null; // Reset selected option
+            checkAnswerButton.disabled = true; // Disable check button until an option is selected
+            checkAnswerButton.classList.remove('hidden'); // Show check button
+            feedbackBar.classList.remove('show'); // Hide feedback bar with transition
+            feedbackBar.classList.add('hidden'); // Fully hide it
+            
+            // Adjust UI based on lesson type
+            if (currentLessonType === 'translate-mcq') {
+                questionPrompt.textContent = 'Translate this:';
+                sourceWordDisplay.textContent = currentLesson.translations[selectedSourceLanguageCode];
+                speakerButton.classList.add('hidden'); // Hide speaker for standard translation
+                userInputField.classList.add('hidden'); // Hide text input
+                optionsContainer.classList.remove('hidden'); // Show options
+            } else if (currentLessonType === 'listen-select') {
+                questionPrompt.textContent = 'Listen and select the correct translation:';
+                sourceWordDisplay.textContent = ''; // Clear text for listen type
+                speakerButton.classList.remove('hidden'); // Show speaker for listen type
+                userInputField.classList.add('hidden'); // Hide text input
+                optionsContainer.classList.remove('hidden'); // Show options
+                // Automatically play the sound when the lesson loads
+                speakText(currentLesson.translations[selectedSourceLanguageCode], selectedSourceLanguageCode);
+            } else if (currentLessonType === 'type-what-you-hear') {
+                questionPrompt.textContent = 'Type what you hear:';
+                sourceWordDisplay.textContent = ''; // Clear text
+                speakerButton.classList.remove('hidden'); // Show speaker
+                optionsContainer.classList.add('hidden'); // Hide options
+                userInputField.classList.remove('hidden'); // Show text input
+                userInputField.value = ''; // Clear input for new question
+                userInputField.disabled = false;
+                userInputField.focus(); // Focus the input field
+                checkAnswerButton.disabled = !userInputField.value.trim(); // Enable if there's initial text
+                // Automatically play the sound when the lesson loads
+                speakText(currentLesson.translations[selectedTargetLanguageCode], selectedTargetLanguageCode);
+            }
+
+            lessonProgressDisplay.textContent = `(${currentLessonIndex + 1} of ${currentQuizLessons.length})`;
+
+            // Generate options for multiple-choice questions
+            if (currentLessonType === 'translate-mcq' || currentLessonType === 'listen-select') {
+                const correctAnswer = currentLesson.translations[selectedTargetLanguageCode];
+                const options = [correctAnswer]; // Start with the correct answer
+
+                // Collect all other possible target translations for distractors
+                const allOtherTargetTranslations = allLessons
+                    .map(lesson => lesson.translations[selectedTargetLanguageCode])
+                    .filter(translation => translation && translation.toLowerCase() !== correctAnswer.toLowerCase()); // Exclude current correct answer
+
+                // Shuffle all available translations to pick random distractors
+                allOtherTargetTranslations.sort(() => Math.random() - 0.5);
+
+                // Add up to 3 unique distractors
+                let addedDistractors = 0;
+                for (let i = 0; i < allOtherTargetTranslations.length && addedDistractors < 3; i++) {
+                    const distractor = allOtherTargetTranslations[i];
+                    if (!options.map(o => o.toLowerCase()).includes(distractor.toLowerCase())) { // Ensure uniqueness (case-insensitive)
+                        options.push(distractor);
+                        addedDistractors++;
+                    }
+                }
+
+                // Shuffle the final options array
+                options.sort(() => Math.random() - 0.5);
+
+                // Create and append buttons for each option
+                options.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.type = 'button'; // Prevent form submission
+                    button.className = 'option-button';
+                    button.textContent = optionText;
+                    button.dataset.value = optionText; // Store the value for checking
+
+                    button.addEventListener('click', () => {
+                        // Remove 'selected' class from previously selected button
+                        const previouslySelected = optionsContainer.querySelector('.option-button.selected');
+                        if (previouslySelected) {
+                            previouslySelected.classList.remove('selected');
+                        }
+                        // Add 'selected' class to the clicked button
+                        button.classList.add('selected');
+                        selectedOptionValue = optionText; // Store the selected value
+                        checkAnswerButton.disabled = false; // Enable check button
+                    });
+                    optionsContainer.appendChild(button);
+                });
+            }
+        }
+
+        /**
+         * Handles the user's answer submission.
+         */
+        function handleSubmit() {
+            const currentLesson = currentQuizLessons[currentLessonIndex];
+            const correctAnswer = currentLesson.translations[selectedTargetLanguageCode];
+            let userAnswer;
+
+            if (currentLessonType === 'type-what-you-hear') {
+                userAnswer = userInputField.value.trim();
+                userInputField.disabled = true; // Disable input after submission
+            } else { // translate-mcq or listen-select
+                if (selectedOptionValue === null) {
+                    // This should ideally not happen if button is disabled until selection
+                    return;
+                }
+                userAnswer = selectedOptionValue;
+                // Disable all option buttons and apply correct/incorrect styling
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.disabled = true;
+                    if (button.dataset.value.toLowerCase() === correctAnswer.toLowerCase()) {
+                        button.classList.add('correct'); // Highlight correct answer
+                    } else if (button.classList.contains('selected')) {
+                        button.classList.add('incorrect'); // Highlight user's incorrect choice
+                    }
+                });
+            }
+
+            // Hide the main check button
+            checkAnswerButton.classList.add('hidden');
+
+            // Show feedback bar with transition
+            feedbackBar.classList.remove('hidden');
+            feedbackBar.classList.add('show');
+            continueButton.disabled = false; // Enable continue button
+
+            if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                feedbackBar.classList.remove('incorrect');
+                feedbackBar.classList.add('correct');
+                feedbackMessage.textContent = 'Correct!';
+                score++;
+                streak++; // Increment streak on correct answer
+                playCorrectSound(); // Play correct sound
+                // Play correct answer audio after getting it right
+                speakText(correctAnswer, selectedTargetLanguageCode);
+            } else {
+                feedbackBar.classList.remove('correct');
+                feedbackBar.classList.add('incorrect');
+                feedbackMessage.textContent = `Incorrect. The correct answer was: ${correctAnswer}`;
+                streak = 0; // Reset streak on incorrect answer
+                playIncorrectSound(); // Play incorrect sound
+            }
+        }
+
+        /**
+         * Moves to the next lesson or shows results.
+         */
+        function handleNext() {
+            if (currentLessonIndex < currentQuizLessons.length - 1) {
+                currentLessonIndex++;
+                loadCurrentLesson();
+                updateProgressBar();
+            } else {
+                showResults();
+            }
+        }
+
+        /**
+         * Displays the final quiz results.
+         */
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            feedbackBar.classList.remove('show'); // Hide feedback bar with transition
+            feedbackBar.classList.add('hidden'); // Fully hide it
+            resultsScreen.classList.remove('hidden');
+            finalScoreDisplay.textContent = `${score} / ${currentQuizLessons.length}`;
+            finalStreakDisplay.textContent = streak; // Display final streak
+        }
+
+        /**
+         * Restarts the quiz from the language selection screen.
+         */
+        function handleRestart() {
+            resultsScreen.classList.add('hidden');
+            languageSelectionScreen.classList.remove('hidden');
+            // Reset state for a fresh start
+            currentLessonIndex = 0;
+            score = 0;
+            streak = 0; // Reset streak
+            currentQuizLessons = [];
+            selectedOptionValue = null;
+            feedbackBar.classList.remove('show'); // Hide feedback bar with transition
+            feedbackBar.classList.add('hidden'); // Fully hide it
+            populateLanguageSelect(sourceLanguageSelect, languages, 'en');
+            populateLanguageSelect(targetLanguageSelect, languages, 'es');
+            hideSelectionError(); // Ensure no error message from previous session
+            progressBar.style.width = '0%'; // Reset progress bar
+        }
+
+        // --- Event Listeners ---
+        startQuizButton.addEventListener('click', startQuiz);
+        checkAnswerButton.addEventListener('click', handleSubmit);
+        continueButton.addEventListener('click', handleNext); // Continue button triggers next lesson
+        speakerButton.addEventListener('click', () => {
+            const currentLesson = currentQuizLessons[currentLessonIndex];
+            // Play audio based on the current lesson type
+            if (currentLessonType === 'listen-select') {
+                speakText(currentLesson.translations[selectedSourceLanguageCode], selectedSourceLanguageCode);
+            } else if (currentLessonType === 'type-what-you-hear') {
+                speakText(currentLesson.translations[selectedTargetLanguageCode], selectedTargetLanguageCode);
+            }
+        });
+
+        // Event listener for input field to enable/disable check button for 'type-what-you-hear'
+        userInputField.addEventListener('input', () => {
+            if (currentLessonType === 'type-what-you-hear') {
+                checkAnswerButton.disabled = !userInputField.value.trim();
+            }
+        });
+
+        // Global keyboard event listener for Enter key
+        document.addEventListener('keydown', (event) => {
+            // Only act if not on results screen and quiz screen is visible
+            if (!resultsScreen.classList.contains('hidden') || quizScreen.classList.contains('hidden')) {
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                if (!feedbackBar.classList.contains('hidden')) {
+                    // If feedback is visible, 'Enter' means continue
+                    handleNext();
+                } else if (!checkAnswerButton.disabled && !checkAnswerButton.classList.contains('hidden')) {
+                    // If check button is visible and enabled, 'Enter' means check answer
+                    handleSubmit();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

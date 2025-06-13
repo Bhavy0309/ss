@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Cool Tic-Tac-Toe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <audio src="aura.mp3"></audio>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #6e8efb, #a777e3); /* Gradient background */
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 800px; /* Responsive max width */
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1); /* Glassmorphism effect - more subtle*/
+            border-radius: 15px; /* Slightly more rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Deeper shadow */
+            backdrop-filter: blur(10px); /* Add blur to the background, stronger blur */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Add a border */
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* More pronounced text shadow */
+            color: #fff; /* Ensure text is white */
+        }
+        #name-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+        #name-input {
+            padding: 12px; /* Slightly larger input */
+            font-size: 0.8rem; /* Slightly larger font */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Glassy border */
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            width: calc(100% - 40px); /* Adjust width, leave space for padding and border */
+            max-width: 300px; /* Max width for input */
+            background-color: rgba(255, 255, 255, 0.1); /* Glassy input background */
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            transition: all 0.3s ease; /* Smooth transition */
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle inset shadow */
+            backdrop-filter: blur(5px);
+        }
+        #name-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5); /* Brighter border on focus */
+            transform: scale(1.05); /* Slight scale on focus */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* More pronounced shadow on focus */
+        }
+
+        #mode-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+        .mode-button {
+            padding: 12px 24px; /* Slightly larger buttons */
+            font-size: 0.8rem; /* Slightly larger font */
+            margin: 0 10px;
+            background-color: rgba(255, 255, 255, 0.2); /* Glassy buttons */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            transition: all 0.3s ease; /* Smooth transition */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .mode-button:hover {
+            background-color: rgba(255, 255, 255, 0.3); /* Slightly brighter on hover */
+            transform: scale(1.05); /* Slight scale on hover */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* More pronounced shadow on hover */
+        }
+        .mode-button.active {
+            background-color: rgba(255, 255, 255, 0.4); /* Active state */
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow effect */
+            transform: scale(1.1); /* slightly larger when active */
+        }
+
+        #board-container {
+            display: grid;
+            grid-template-columns: repeat(3, 100px); /* Larger cells */
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .cell {
+            width: 100px; /* Explicitly set width and height */
+            height: 100px;
+            font-size: 2rem; /* Larger font size */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.3); /* Glassy border */
+            border-radius: 10px; /* More rounded cells */
+            cursor: pointer;
+            transition: all 0.2s ease; /* Smooth transition */
+            background-color: rgba(255, 255, 255, 0.1); /* Glassy cell background */
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle inset shadow */
+            backdrop-filter: blur(5px);
+            color: #fff;
+        }
+        .cell:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Slightly brighter on hover */
+            transform: scale(1.05); /* Slight scale on hover */
+            border-color: rgba(255, 255, 255, 0.5); /* Brighter border on hover */
+        }
+        .cell.x {
+            color: #ff6b81; /* X color */
+        }
+        .cell.o {
+            color: #42a5f5; /* O color */
+        }
+        #message-container {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            min-height: 1.2em; /* Reserve space to avoid layout shift */
+            text-align: center;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .button {
+            padding: 12px 24px;
+            font-size: 0.8rem;
+            margin: 0 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        .button.active {
+            background-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        #play-history-container {
+            position: absolute; /* Use absolute positioning */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            display: none; /* Initially hidden */
+            max-height: 80vh; /* Max height, with scrollbar */
+            overflow-y: auto;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        #play-history-container h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #333;
+            text-align: center;
+        }
+        #play-history-list {
+            list-style-type: none;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+        #play-history-list li {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            font-size: 0.7rem;
+            color: #333;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px);
+        }
+        #play-history-container button {
+            padding: 0.5rem 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 0 auto;
+        }
+        #play-history-container button:hover {
+            background-color: #45a049;
+        }
+        #music-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10; /* Ensure music controls are above other elements */
+        }
+
+        #music-toggle {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: background-color 0.3s ease;
+            border: none;
+            font-family: 'Press Start 2P', cursive;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        #music-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        #volume-slider {
+            width: 100px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb:hover,
+        #volume-slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        #game-over-modal {
+            position: fixed; /* Use fixed positioning */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1rem;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        #game-over-modal p {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        #game-over-modal button {
+            padding: 0.75rem 1.5rem;
+            background-color: #00B8D4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.3s ease;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        #game-over-modal button:hover {
+            background-color: #00869e;
+        }
+        @media (max-width: 600px) {
+        #game-container {
+            width: 95%;
+            padding: 15px;
+        }
+        h1 {
+            font-size: 1.75rem;
+        }
+        #name-input {
+            font-size: 0.7rem;
+            padding: 10px;
+        }
+        .mode-button {
+            font-size: 0.7rem;
+            padding: 10px 20px;
+            margin: 5px;
+        }
+        .cell {
+            width: 80px;
+            height: 80px;
+            font-size: 1.5rem;
+        }
+        #board-container {
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 8px;
+        }
+        .button {
+            font-size: 0.7rem;
+            padding: 10px 20px;
+            margin: 5px;
+        }
+        #message-container{
+            font-size: 0.8rem;
+        }
+        #music-container {
+            top: 10px;
+            right: 10px;
+        }
+        #music-toggle {
+            font-size: 0.6rem;
+            padding: 8px;
+        }
+        #volume-slider {
+            width: 80px;
+        }
+        #game-over-modal {
+            font-size: 0.9rem;
+            padding: 15px;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Super Cool Tic-Tac-Toe</h1>
+        <div id="name-container">
+            <input type="text" id="name-input" placeholder="Enter Your Name" />
+        </div>
+        <div id="mode-container">
+            <button class="mode-button" data-mode="multiplayer">Multiplayer</button>
+            <button class="mode-button" data-mode="ai">AI vs Player</button>
+        </div>
+        <div id="board-container">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <div id="message-container"></div>
+        <div class="button" id="play-again">Play Again</div>
+        <div class="button" id="view-history">Play History</div>
+        <div class="button" id="exit-mode" style="display: none;">Exit Mode</div>
+
+        <div id="play-history-container">
+            <h2>Play History</h2>
+            <ul id="play-history-list"></ul>
+            <button id="close-history">Close</button>
+        </div>
+         <div id="game-over-modal">
+            <p id="game-over-message"></p>
+            <button id="restart-game">Restart</button>
+        </div>
+        <div id="music-container">
+            <button id="music-toggle">Toggle Music</button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+        </div>
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="bensound-epic.mp3" type="audio/mpeg">
+        Your 
+    </audio>
+
+    <script>
+        // --- Game Variables ---
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let mode = 'multiplayer';
+        let player1Name = '';
+        let player2Name = ''; // For multiplayer mode
+        let playHistory = [];
+        let currentLevel = 'easy';  // Default level
+        let musicPlaying = false;
+        let audio = document.getElementById("background-music");
+
+        // --- DOM Elements ---
+        const boardContainer = document.getElementById('board-container');
+        const cells = document.querySelectorAll('.cell');
+        const messageContainer = document.getElementById('message-container');
+        const playAgainButton = document.getElementById('play-again');
+        const modeButtons = document.querySelectorAll('.mode-button');
+        const nameInput = document.getElementById('name-input');
+        const viewHistoryButton = document.getElementById('view-history');
+        const playHistoryContainer = document.getElementById('play-history-container');
+        const playHistoryList = document.getElementById('play-history-list');
+        const closeHistoryButton = document.getElementById('close-history');
+        const exitModeButton = document.getElementById('exit-mode');
+        const musicToggle = document.getElementById('music-toggle');
+        const volumeSlider = document.getElementById('volume-slider');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const restartGameButton = document.getElementById('restart-game');
+
+        // --- Event Listeners ---
+        modeButtons.forEach(button => {
+            button.addEventListener('click', handleModeSelect);
+        });
+        cells.forEach(cell => {
+            cell.addEventListener('click', handleCellClick);
+        });
+        playAgainButton.addEventListener('click', startGame);
+        viewHistoryButton.addEventListener('click', showPlayHistory);
+        closeHistoryButton.addEventListener('click', hidePlayHistory);
+        exitModeButton.addEventListener('click', handleExitMode);
+        musicToggle.addEventListener('click', toggleMusic);
+        volumeSlider.addEventListener('input', changeVolume);
+        restartGameButton.addEventListener('click', startGame);
+
+
+        // --- Functions ---
+
+        /**
+         * Initializes the game state and UI for a new game.
+         */
+        function startGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            messageContainer.textContent = '';
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('x', 'o');
+            });
+            playAgainButton.style.display = 'none';
+            gameOverModal.style.display = 'none';
+
+            if (mode === 'ai' && currentPlayer === 'O') {
+                makeAIMove(currentLevel);
+            }
+        }
+
+        /**
+         * Handles a click on a cell in the game board.
+         */
+        function handleCellClick(event) {
+            const cell = event.target;
+            const index = parseInt(cell.dataset.index);
+
+            if (board[index] === '' && gameActive) {
+                board[index] = currentPlayer;
+                cell.textContent = currentPlayer;
+                cell.classList.add(currentPlayer.toLowerCase());
+
+                if (checkWin()) {
+                    gameActive = false;
+                    let winner = (currentPlayer === 'X') ? player1Name : (mode === 'multiplayer') ? player2Name : 'AI';
+                    messageContainer.textContent = `${winner} wins!`;
+                    saveGameHistory(winner);
+                    showGameOverModal(`${winner} wins!`);
+                } else if (checkDraw()) {
+                    gameActive = false;
+                    messageContainer.textContent = "It's a draw!";
+                    saveGameHistory("Draw");
+                    showGameOverModal("It's a draw!");
+                } else {
+                    switchPlayer();
+                    if (mode === 'ai' && currentPlayer === 'O') {
+                        makeAIMove(currentLevel);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Switches the current player.
+         */
+        function switchPlayer() {
+            currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+        }
+
+        /**
+         * Checks if the current player has won the game.
+         * @returns {boolean} True if the current player has won, false otherwise.
+         */
+        function checkWin() {
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]             // Diagonals
+            ];
+
+            for (let condition of winningConditions) {
+                const [a, b, c] = condition;
+                if (board[a] !== '' && board[a] === board[b] && board[a] === board[c]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Checks if the game is a draw.
+         * @returns {boolean} True if the game is a draw, false otherwise.
+         */
+        function checkDraw() {
+            return board.every(cell => cell === '');
+        }
+
+        /**
+         * Handles the selection of a game mode (multiplayer or AI).
+         */
+        function handleModeSelect(event) {
+            mode = event.target.dataset.mode;
+            modeButtons.forEach(button => button.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (mode === 'ai') {
+                player2Name = 'AI';
+                exitModeButton.style.display = 'block';
+                // Set up AI difficulty level selection (you can expand this)
+                currentLevel = 'easy'; // Default to easy mode for now
+            } else {
+                player2Name = '';
+                exitModeButton.style.display = 'none';
+            }
+
+            // Get Player Names
+            player1Name = nameInput.value.trim();
+            if (player1Name === '') {
+                player1Name = 'Player 1';
+            }
+
+            startGame();
+        }
+
+        /**
+         * Handles the AI's move in single-player mode.
+         */
+        function makeAIMove(level) {
+            if (!gameActive) return;
+
+            let index;
+            if (level === 'easy') {
+                index = findRandomEmptyCell();
+            } else if (level === 'medium') {
+                index = findBlockingOrWinningMove();
+            } else if (level === 'hard') {
+                index = minimax(board, 'O').index;
+            }
+
+            if (index !== null) {
+                board[index] = 'O';
+                cells[index].textContent = 'O';
+                cells[index].classList.add('o');
+
+                if (checkWin()) {
+                    gameActive = false;
+                    messageContainer.textContent = 'AI wins!';
+                    saveGameHistory('AI');
+                    showGameOverModal('AI wins!');
+                } else if (checkDraw()) {
+                    gameActive = false;
+                    messageContainer.textContent = "It's a draw!";
+                    saveGameHistory("Draw");
+                    showGameOverModal("It's a draw!");
+                } else {
+                    switchPlayer();
+                }
+            }
+        }
+
+        /**
+         * Finds a random empty cell on the board.  Used for easy AI.
+         * @returns {number|null} The index of the empty cell, or null if the board is full.
+         */
+        function findRandomEmptyCell() {
+            const emptyCells = [];
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] === '') {
+                    emptyCells.push(i);
+                }
+            }
+            if (emptyCells.length === 0) {
+                return null;
+            }
+            const randomIndex = Math.floor(Math.random() * emptyCells.length);
+            return emptyCells[randomIndex];
+        }
+
+        /**
+        * Finds a move to block the player or win for the AI. Used for medium AI.
+        * @returns {number|null} The index of the best move, or null if no such move exists.
+        */
+        function findBlockingOrWinningMove() {
+            // Check for AI winning move
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] === '') {
+                    let tempBoard = [...board];
+                    tempBoard[i] = 'O';
+                    if (checkWinWithBoard(tempBoard, 'O')) {
+                        return i;
+                    }
+                }
+            }
+
+            // Check for player blocking move
+            for (let i = 0; i < board.length; i++) {
+                if (board[i] === '') {
+                    let tempBoard = [...board];
+                    tempBoard[i] = 'X';
+                    if (checkWinWithBoard(tempBoard, 'X')) {
+                        return i;
+                    }
+                }
+            }
+
+            // If no winning or blocking move, return a random empty cell
+            return findRandomEmptyCell();
+        }
+
+        /**
+         * Checks if a player has won on a given board.
+         * @param {Array<string>} testBoard The board to check.
+         * @param {string} player The player to check for ('X' or 'O').
+         * @returns {boolean} True if the player has won, false otherwise.
+         */
+        function checkWinWithBoard(testBoard, player) {
+            const winningConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]             // Diagonals
+            ];
+
+            for (let condition of winningConditions) {
+                const [a, b, c] = condition;
+                if (testBoard[a] !== '' && testBoard[a] === testBoard[b] && testBoard[a] === testBoard[c] && testBoard[a] === player) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Minimax algorithm for AI decision making (for hard AI).
+         * @param {Array<string>} currentBoard The current game board.
+         * @param {string} player The current player ('X' or 'O').
+         * @returns {object} The best move (index) and its score.
+         */
+        function minimax(currentBoard, player) {
+            let emptyCells = [];
+            for (let i = 0; i < currentBoard.length; i++) {
+                if (currentBoard[i] === '') {
+                    emptyCells.push(i);
+                }
+            }
+
+            if (checkWinWithBoard(currentBoard, 'X')) {
+                return { index: null, score: -10 };
+            } else if (checkWinWithBoard(currentBoard, 'O')) {
+                return { index: null, score: 10 };
+            } else if (emptyCells.length === 0) {
+                return { index: null, score: 0 };
+            }
+
+            let moves = [];
+            for (let i = 0; i < emptyCells.length; i++) {
+                let move = {};
+                move.index = emptyCells[i];
+                let nextBoard = [...currentBoard];
+                nextBoard[emptyCells[i]] = player;
+
+                if (player === 'O') {
+                    let result = minimax(nextBoard, 'X');
+                    move.score = result.score;
+                } else {
+                    let result = minimax(nextBoard, 'O');
+                    move.score = result.score;
+                }
+                moves.push(move);
+            }
+
+            let bestMove;
+            if (player === 'O') {
+                let bestScore = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score > bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = i;
+                    }
+                }
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score < bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = i;
+                    }
+                }
+            }
+            return moves[bestMove];
+        }
+
+        /**
+         * Displays the play history.
+         */
+        function showPlayHistory() {
+            playHistoryList.innerHTML = ''; // Clear previous history
+            if (playHistory.length === 0) {
+                playHistoryList.innerHTML = '<li>No games played yet.</li>';
+            } else {
+                playHistory.forEach((game, index) => {
+                    playHistoryList.innerHTML += `<li>Game ${index + 1}: Winner - ${game}</li>`;
+                });
+            }
+            playHistoryContainer.style.display = 'block';
+        }
+
+        /**
+         * Hides the play history.
+         */
+        function hidePlayHistory() {
+            playHistoryContainer.style.display = 'none';
+        }
+
+        /**
+         * Saves the game history to an array.
+         * @param {string} winner The winner of the game.
+         */
+        function saveGameHistory(winner) {
+            playHistory.push(winner);
+        }
+
+        /**
+         * Handles exiting the AI mode and returning to multiplayer mode.
+         */
+        function handleExitMode() {
+            mode = 'multiplayer';
+            modeButtons.forEach(button => button.classList.remove('active'));
+            modeButtons[0].classList.add('active'); // Select Multiplayer button
+            exitModeButton.style.display = 'none';
+            player2Name = '';
+            startGame();
+        }
+
+        /**
+         * Toggles the background music on and off.
+         */
+        function toggleMusic() {
+            if (musicPlaying) {
+                audio.pause();
+                musicPlaying = false;
+                musicToggle.textContent = 'Turn Music On';
+            } else {
+                audio.play().catch(err => {
+                    console.error("Playback failed:", err);
+                    musicPlaying = false;
+                    musicToggle.textContent = 'Turn Music On';
+                });
+                musicPlaying = true;
+                musicToggle.textContent = 'Turn Music Off';
+            }
+        }
+
+        /**
+         * Changes the volume of the background music.
+         */
+        function changeVolume() {
+            audio.volume = volumeSlider.value;
+        }
+
+        /**
+         * Displays the Game Over Modal
+         */
+        function showGameOverModal(message) {
+            gameOverMessage.textContent = message;
+            gameOverModal.style.display = 'block';
+        }
+
+        // --- Initial Setup ---
+        nameInput.value = 'Player 1'; // Default player name
+        modeButtons[0].classList.add('active'); // Default to Multiplayer mode
+        startGame(); // Start the game when the page loads
+
+        // --- Music Setup ---
+        audio.volume = volumeSlider.value; // Set initial volume
+        // Optional: Start playing music automatically on page load
+        // toggleMusic(); // Call this if you want music to play on load
+    </script>
+</body>
+</html>

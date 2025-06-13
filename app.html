@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition App</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+        .microphone-button {
+            border: none;
+            background-color: #6b7280; /* Gray 500 */
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem; /* Rounded md */
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1); /* Shadow md */
+        }
+        .microphone-button:hover {
+            background-color: #4b5563; /* Gray 700 */
+        }
+        .microphone-button:active {
+            background-color: #374151; /* Gray 800 */
+            box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.1); /* Smaller shadow */
+        }
+        .recording {
+            animation: pulse 2s infinite;
+            background-color: #ef4444; /* Red 500 */
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        #transcript {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #d1d5db; /* Gray 300 */
+            border-radius: 0.5rem; /* Rounded md */
+            background-color: #f9fafb; /* Gray 50 */
+            text-align: left;
+            min-height: 4rem;
+        }
+        #message {
+            margin-top: 1rem;
+            color: #dc2626; /* Red 600 */
+            font-weight: 500; /* Font medium */
+        }
+        .command {
+            font-weight: 600;
+            color: #1e40af; /* Blue 700 */
+        }
+        #url-input {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            width: 100%;
+            max-width: 300px;
+        }
+        .open-button {
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 500;
+            border: none;
+        }
+        .open-button:hover {
+            background-color: #2563eb;
+        }
+        .open-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .selection-box {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            width: 100%;
+            max-width: 300px;
+            appearance: none;  /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E"); /* Add custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1rem;
+        }
+
+        .selection-box:focus {
+            outline: none;
+            border-color: #3b82f6; /* Highlight on focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Add focus shadow */
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #search-box {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-4">Speech Recognition</h1>
+        <p class="text-gray-600 mb-6">Click the button and start speaking, or select an option below.</p>
+
+        <button id="microphone-button" class="microphone-button">
+            <span id="microphone-icon">🎙️</span> <span id="record-text">Start Recording</span>
+        </button>
+
+        <div id="transcript" class="text-gray-700"></div>
+        <p id="message" class="text-red-500"></p>
+
+        <input type="text" id="search-box" placeholder="Search websites...">
+        <select id="url-selection" class="selection-box fade-in">
+            <option value="" disabled selected>Select a website</option>
+        </select>
+        <button id="open-button" class="open-button">Open</button>
+        <input type="text" id="url-input" class="hidden" placeholder="Enter URL">
+
+    </div>
+
+    <script>
+        const microphoneButton = document.getElementById('microphone-button');
+        const microphoneIcon = document.getElementById('microphone-icon');
+        const recordText = document.getElementById('record-text');
+        const transcriptDiv = document.getElementById('transcript');
+        const messageDiv = document.getElementById('message');
+        const urlInput = document.getElementById('url-input');
+        const openButton = document.getElementById('open-button');
+        const urlSelection = document.getElementById('url-selection');
+        const searchBox = document.getElementById('search-box');
+
+
+        let isRecording = false;
+        let recognition;
+
+        // Define a mapping of commands to actions.  This is crucial.
+        const commands = {
+            "open google": () => {
+                messageDiv.textContent = 'Opening Google...';
+                openWebsite("google");
+            },
+            "open youtube": () => {
+                messageDiv.textContent = 'Opening YouTube...';
+                openWebsite("youtube");
+            },
+            "open facebook": () => {
+                messageDiv.textContent = 'Opening Facebook...';
+                openWebsite("facebook");
+            },
+            "open twitter": () => {
+                messageDiv.textContent = 'Opening Twitter...';
+                openWebsite("twitter");
+            },
+            "open github": () => {
+                messageDiv.textContent = 'Opening GitHub...';
+                openWebsite("github");
+            },
+            "open netflix": () => {
+                messageDiv.textContent = 'Opening Netflix...';
+                openWebsite("netflix");
+            },
+            "open amazon": () => {
+                messageDiv.textContent = 'Opening Amazon...';
+                openWebsite("amazon");
+            },
+            "open wikipedia": () => {
+                messageDiv.textContent = 'Opening Wikipedia...';
+                openWebsite("wikipedia");
+            },
+            "search for": (query) => {  // Example of a command with an argument
+                messageDiv.textContent = `Searching Google for "${query}"...`;
+                openWebsite(`https://www.google.com/search?q=${encodeURIComponent(query)}`);
+            },
+            "go back": () => {
+                messageDiv.textContent = `Going back`;
+                window.history.back();
+            },
+            "go forward": () => {
+                messageDiv.textContent = `Going forward`;
+                window.history.forward();
+            },
+            "reload page": () => {
+                messageDiv.textContent = `Reloading`;
+                window.location.reload();
+            },
+            "open netlify": () => {  // Changed command to "open netlify"
+                messageDiv.textContent = "Opening Netlify...";
+                openWebsite("netlify");
+            },
+            "open calculator": () => {
+                messageDiv.textContent = "Opening Calculator...";
+                openWebsite("calculator");
+            },
+            "open scratch": () => {
+                messageDiv.textContent = "Opening Scratch...";
+                openWebsite("scratch");
+            },
+            "open crazy games": () => {
+                messageDiv.textContent = "Opening Crazy Games...";
+                openWebsite("crazy games");
+            },
+            "open poki": () => {
+                messageDiv.textContent = "Opening Poki...";
+                openWebsite("poki");
+            },
+            "open website": (siteName) => {
+                messageDiv.textContent = `Opening ${siteName}...`;
+                openWebsite(siteName);
+            },
+            "open stopwatch": () => {
+                messageDiv.textContent = "Opening Stopwatch...";
+                openWebsite("stopwatch");
+            },
+            "open password maker": () => {
+                messageDiv.textContent = "Opening Password Maker...";
+                openWebsite("password maker");
+            },
+            "open qr code helper": () => {
+                messageDiv.textContent = "Opening QR Code Helper...";
+                openWebsite("qr code helper");
+            },
+            "open science helper": () => {
+                messageDiv.textContent = "Opening Science Helper...";
+                openWebsite("science helper");
+            },
+            "open math helper": () => {
+                messageDiv.textContent = "Opening Math Helper...";
+                openWebsite("math helper");
+            },
+            "open number guessing game": () => {
+                messageDiv.textContent = "Opening Number Guessing Game...";
+                openWebsite("number guessing game");
+            },
+            "open tic tac toe": () => {
+                messageDiv.textContent = "Opening Tic Tac Toe...";
+                openWebsite("tic tac toe");
+            },
+            "open speech recognition app": () => {
+                messageDiv.textContent = "Opening Speech Recognition App...";
+                openWebsite("speech recognition app");
+            },
+            "open chess game": () => {
+                messageDiv.textContent = "Opening Chess Game...";
+                openWebsite("chess game");
+            }
+        };
+
+        const websiteOptions = [
+            { name: "Google", url: "https://www.google.com" },
+            { name: "YouTube", url: "https://www.youtube.com" },
+            { name: "Facebook", url: "https://www.facebook.com" },
+            { name: "Twitter", url: "https://twitter.com" },
+            { name: "GitHub", url: "https://github.com" },
+            { name: "Netflix", url: "https://www.netflix.com" },
+            { name: "Amazon", url: "https://www.amazon.com" },
+            { name: "Wikipedia", url: "https://www.wikipedia.org" },
+            { name: "Netlify", url: "https://www.netlify.com" },
+            { name: "Calculator", url: "https://calculate-helper.netlify.app" },
+            { name: "Scratch", url: "https://scratch.mit.edu/" },
+            { name: "Crazy Games", url: "https://www.crazygames.com/" },
+            { name: "Poki", url: "https://poki.com/" },
+            { name: "DuckDuckGo", url: "https://duckduckgo.com" },
+            { name: "Yahoo", url: "https://www.yahoo.com" },
+            { name: "Bing", url: "https://www.bing.com" },
+            { name: "Stack Overflow", url: "https://stackoverflow.com" },
+            { name: "Reddit", url: "https://www.reddit.com" },
+            { name: "Twitch", url: "https://www.twitch.tv" },
+            { name: "Instagram", url: "https://www.instagram.com" },
+            { name: "LinkedIn", url: "https://www.linkedin.com" },
+            { name: "Pinterest", url: "https://www.pinterest.com" },
+            { name: "Medium", url: "https://medium.com" },
+            { name: "BBC News", url: "https://www.bbc.com/news" },
+            { name: "CNN", url: "https://www.cnn.com" },
+            { name: "The New York Times", url: "https://www.nytimes.com" },
+            { name: "The Washington Post", url: "https://www.washingtonpost.com" },
+            { name: "ESPN", url: "https://www.espn.com" },
+            { name: "National Geographic", url: "https://www.nationalgeographic.com" },
+            { name: "IMDb", url: "https://www.imdb.com" },
+            { name: "Spotify", url: "https://www.spotify.com" },
+            { name: "Apple Music", url: "https://www.apple.com/music/" },
+            { name: "SoundCloud", url: "https://soundcloud.com" },
+            { name: "Zoom", url: "https://zoom.us" },
+            { name: "Slack", url: "https://slack.com" },
+            { name: "Discord", url: "https://discord.com" },
+            { name: "Salesforce", url: "https://www.salesforce.com" },
+            { name: "Adobe", url: "https://www.adobe.com" },
+            { name: "Canva", url: "https://www.canva.com" },
+            { name: "Stopwatch", url: "https://stop-watch-help.netlify.app" },
+            { name: "Password Maker", url: "https://passwords-maker.netlify.app" },
+            { name: "QR Code Helper", url: "https://code-qr-help.netlify.app" },
+            { name: "Science Helper", url: "https://science-helper.netlify.app" },
+            { name: "Math Helper", url: "https://math-helper-ai.netlify.app" },
+            { name: "Number Guessing Game", url: "https://numbers-guessing-ai.netlify.app" },
+            { name: "Tic Tac Toe", url: "https://tic-tac-toe-game-ing.netlify.app" },
+            { name: "Speech Recognition App", url: "https://speach-recognition.netlify.app" },
+            { name: "Chess Game", url: "https://sigma-chess-game.netlify.app" }
+        ];
+
+        function openWebsite(site) {
+            let url = "";
+            if (site.startsWith("http://") || site.startsWith("https://")) {
+                url = site; // Use the provided URL directly
+            }
+            else{
+                const selectedSite = websiteOptions.find(option => option.name.toLowerCase() === site.toLowerCase());
+                url = selectedSite ? selectedSite.url : site;
+            }
+
+            window.open(url, "_blank");
+        }
+
+        // Check if the SpeechRecognition API is supported by the browser
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true; // Keep listening even after pauses
+            recognition.interimResults = true; // Show partial results as they become available
+
+            recognition.onstart = () => {
+                isRecording = true;
+                microphoneIcon.textContent = '🔴'; // Red Circle Emoji
+                recordText.textContent = 'Stop Recording';
+                microphoneButton.classList.add('recording');
+                transcriptDiv.textContent = ''; // Clear previous transcript
+                messageDiv.textContent = '';
+                openButton.disabled = true; // Disable the button when recording starts
+                urlInput.disabled = true;
+                urlSelection.disabled = true;
+                searchBox.disabled = true;
+
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                microphoneIcon.textContent = '🎙️'; // Microphone Emoji
+                recordText.textContent = 'Start Recording';
+                microphoneButton.classList.remove('recording');
+                openButton.disabled = !urlSelection.value.trim(); // Enable if dropdown has value
+                urlInput.disabled = false;
+                urlSelection.disabled = false;
+                searchBox.disabled = false;
+
+
+            };
+
+            recognition.onerror = (event) => {
+                isRecording = false;
+                microphoneIcon.textContent = '🎙️'; // Microphone Emoji
+                recordText.textContent = 'Start Recording';
+                microphoneButton.classList.remove('recording');
+                openButton.disabled = !urlSelection.value.trim();  // Enable if dropdown has value
+                urlInput.disabled = false;
+                urlSelection.disabled = false;
+                searchBox.disabled = false;
+
+                if (event.error === 'no-speech') {
+                    messageDiv.textContent = 'No speech detected. Please try again.';
+                } else if (event.error === 'aborted') {
+                    messageDiv.textContent = 'Speech recognition was aborted.';
+                } else if (event.error === 'not-allowed') {
+                    messageDiv.textContent = 'Microphone access is blocked. Please allow microphone access in your browser settings and refresh the page.';
+                }
+                else {
+                    messageDiv.textContent = 'An error occurred: ' + event.error;
+                }
+            };
+
+            let finalTranscript = '';
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                transcriptDiv.textContent = finalTranscript + interimTranscript;
+                const lowerCaseTranscript = finalTranscript.toLowerCase();
+
+                // Check for commands
+                for (const command in commands) {
+                    if (lowerCaseTranscript.includes(command)) {
+                        messageDiv.textContent = `Executing command: <span class="command">${command}</span>`;
+                        const action = commands[command];
+                        if (typeof action === 'function') {
+                           // Extract the argument for commands like "search for"
+                            const match = lowerCaseTranscript.match(new RegExp(command + " (.+)"));
+                            const argument = match ? match[1] : '';
+                            action(argument); // Execute the command
+                        }
+                        break; // Stop checking commands after the first match
+                    }
+                }
+                finalTranscript = '';
+            };
+
+            microphoneButton.addEventListener('click', () => {
+                if (isRecording) {
+                    recognition.stop();
+                } else {
+                    // Check for microphone permissions before starting.
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then((stream) => {
+                            //Got permission, start.
+                            finalTranscript = ''; // Reset transcript at start
+                            recognition.start();
+                            // Stop the stream to release the microphone.
+                            stream.getTracks().forEach(track => track.stop());
+                        })
+                        .catch((err) => {
+                            //The user denied permission.
+                            messageDiv.textContent = 'Please allow microphone access to use speech recognition. Error: ' + err.message;
+                            console.error("Error accessing microphone:", err);
+                        });
+                }
+            });
+
+            function populateWebsiteDropdown(searchTerm = "") {
+                urlSelection.innerHTML = '<option value="" disabled selected>Select a website</option>'; // Clear existing options
+                const filteredOptions = websiteOptions.filter(option =>
+                    option.name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+
+                filteredOptions.forEach(option => {
+                    const newOption = document.createElement('option');
+                    newOption.value = option.name.toLowerCase();
+                    newOption.textContent = option.name;
+                    urlSelection.appendChild(newOption);
+                });
+                openButton.disabled = !urlSelection.value.trim();
+            }
+
+            populateWebsiteDropdown();
+
+            searchBox.addEventListener('input', () => {
+                populateWebsiteDropdown(searchBox.value);
+                urlInput.value = "";
+                if (searchBox.value.trim()) {
+                    openButton.classList.remove('hidden');
+                    urlSelection.classList.remove('hidden');
+                    urlInput.classList.add('hidden');
+                }
+                else {
+                    openButton.classList.add('hidden');
+                    urlSelection.classList.remove('hidden');
+                    urlInput.classList.add('hidden');
+                }
+            });
+
+            urlSelection.addEventListener('change', () => {
+                openButton.disabled = !urlSelection.value.trim();
+                urlInput.value = "";
+                if (urlSelection.value.trim()) {
+                    openButton.classList.remove('hidden');
+                    urlInput.classList.add('hidden');
+                }
+                else {
+                    openButton.classList.add('hidden');
+                    urlInput.classList.remove('hidden');
+                }
+            });
+
+            openButton.addEventListener('click', () => {
+                const urlValue =  urlSelection.value.trim();
+                if (urlValue) {
+                    openWebsite(urlValue);
+                }
+            });
+        } else {
+            messageDiv.textContent = 'Speech recognition is not supported in this browser.';
+            microphoneButton.disabled = true;
+            openButton.disabled = true;
+            urlInput.disabled = true;
+            urlSelection.disabled=true;
+            searchBox.disabled = true;
+        }
+    </script>
+</body>
+</html>
